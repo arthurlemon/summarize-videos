@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "summarize-videos"
+version = "0.1.0"
+description = ""
+authors = ["arthurlemon <arten33@gmail.com>"]
+readme = "README.md"
+packages = [{include = "summarize_videos"}]
+
+[tool.poetry.dependencies]
+python = "~3.11"
+youtube-transcript-api = "^0.6.1"
+pandas = "^2.0.2"
+fastapi = "^0.97.0"
+uvicorn = "^0.22.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
