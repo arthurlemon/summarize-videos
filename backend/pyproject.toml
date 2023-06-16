@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "summarize-videos"
+version = "0.1.0"
+description = "Toy app to summarize youtube videos with openai"
+authors = ["arthurlemon"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~3.11"
+youtube-transcript-api = "^0.6.1"
+fastapi = "^0.97.0"
+uvicorn = "^0.22.0"
+loguru = "^0.7.0"
+openai = "^0.27.8"
+python-dotenv = "^1.0.0"
+pydantic = "^1.10.9"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.2"
+pre-commit = "^3.3.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
