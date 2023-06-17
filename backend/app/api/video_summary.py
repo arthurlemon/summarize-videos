@@ -1,37 +1,43 @@
-from fastapi import APIRouter
 from data_manager import get_video_summary, save_video_summary
+from fastapi import APIRouter
+from loguru import logger
 from pydantic import BaseModel
-
-# import and setup your Youtube and GPT-3.5 API here
 
 router = APIRouter()
 
 
 class VideoSummaryRequest(BaseModel):
+    # TODO - Add validation to ensure this is a valid youtube url
     url: str
 
 
 class VideoSummaryResponse(BaseModel):
-    url: str
+    video_id: str
     summary_all: str
     summary_sections: list
 
 
 @router.post("/summarize", response_model=VideoSummaryResponse)
 async def summarize_video(video: VideoSummaryRequest):
-    # Check if video summary exists
-    video_summary = get_video_summary(video.url)
-
+    # TODO - Better way to extract video id?
+    video_id = video.url.split("v=")[-1]
+    logger.info(f"Summarizing video: {video_id}")
+    video_summary = get_video_summary(video_id, not_exists_ok=True)
     # Save the summary
-    save_video_summary(video.url, video_summary, [])
+    save_video_summary(
+        video_id, video_summary["summary_all"], video_summary["summary_sections"]
+    )
 
-    return {"url": video.url, "summary_all": video_summary, "summary_sections": []}
+    return VideoSummaryResponse(
+        video_id=video_id,
+        summary_all=video_summary["summary_all"],
+        summary_sections=video_summary["summary_sections"],
+    )
 
 
-@router.get("/summary/{url}", response_model=VideoSummaryResponse)
-async def get_summary(url: str):
-    # Get video summary if it exists
-    video_data = get_video_summary(url)
+@router.get("/summary/{video_id}", response_model=VideoSummaryResponse | dict)
+async def get_summary(video_id: str):
+    video_data = get_video_summary(video_id, not_exists_ok=False)
     if video_data is not None:
         return video_data
 

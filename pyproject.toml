@@ -12,6 +12,8 @@ youtube-transcript-api = "^0.6.1"
 pandas = "^2.0.2"
 fastapi = "^0.97.0"
 uvicorn = "^0.22.0"
+loguru = "^0.7.0"
+pre-commit = "^3.3.3"
 
 
 [build-system]

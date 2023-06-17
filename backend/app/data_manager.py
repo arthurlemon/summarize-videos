@@ -1,54 +1,68 @@
-import pandas as pd
+import json
 import os
+
 from youtube_transcript_api import YouTubeTranscriptApi
 
-# TODO - Deal with cache with dataframe
-
-DATA_FILE = "data.csv"
-dataframe = pd.DataFrame(columns=["url", "summary_all", "summary_sections"])
+DATA_FILE = "data.json"
 
 
-def load_data():
-    global dataframe
+def load_data() -> list:
     if os.path.isfile(DATA_FILE):
-        dataframe = pd.read_csv(DATA_FILE)
+        with open(DATA_FILE, "r") as f:
+            data = json.load(f)
     else:
-        dataframe = pd.DataFrame(columns=["url", "summary_all", "summary_sections"])
+        data = []
+    return data
 
 
-def save_data():
-    global dataframe
-    dataframe.to_csv(DATA_FILE, index=False)
+# TODO - Get video summary from database
+data = load_data()
 
 
-def get_video_summary(url):
-    global dataframe
-    video_data = dataframe[dataframe["url"] == url]
-    if video_data.empty:
-        transcript = get_transcript(url)
+def save_data(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f)
+
+
+# TODO - Refactor to use video_id instead of url
+def get_video_summary(video_id, not_exists_ok: bool = True, use_cache: bool = False):
+    global data
+    if use_cache:
+        for video_data in data:
+            if video_data["url"] == video_id:
+                return video_data
+        if not not_exists_ok:
+            return None
+    else:
+        transcript = get_transcript(video_id)
         summary = generate_summary(transcript)
         return summary
-    else:  # cache hit
-        return video_data.iloc[0]
 
 
-def get_transcript(url):
-    # dirty logic to extract video id from url
-    start_index = url.index("v=") + 2
-    extracted_string = url[start_index:]
+def get_transcript(video_id):
+    # TODO - Handle errors with video without subtitles
+    transcript = YouTubeTranscriptApi.get_transcript(video_id)
+    # Add end instead of duration
+    for section in transcript:
+        section["end"] = round(section["start"] + section["duration"], 4)
 
-    transcript = YouTubeTranscriptApi.get_transcript(extracted_string)
     return transcript
 
 
 def generate_summary(transcript):
     # TODO - Generate summary from transcript
-    return transcript[0]
+    # Will require splitting transcript into sections
+    # generating a summary for each section
+    # and geneating a summary for the entire video from the section summaries
+    return {
+        "summary_all": transcript[0]["text"],
+        "summary_sections": [section for section in transcript],
+    }
 
 
 def save_video_summary(url, summary_all, summary_sections):
-    global dataframe
-    dataframe = pd.concat(dataframe, 
-        pd.DataFrame.from_dict({"url": url, "summary_all": summary_all, "summary_sections": summary_sections},
-    ))
-    save_data()
+    global data
+    data.append(
+        {"url": url, "summary_all": summary_all, "summary_sections": summary_sections}
+    )
+    save_data(data)
