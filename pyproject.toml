@@ -9,11 +9,12 @@ packages = [{include = "summarize_videos"}]
 [tool.poetry.dependencies]
 python = "~3.11"
 youtube-transcript-api = "^0.6.1"
-pandas = "^2.0.2"
 fastapi = "^0.97.0"
 uvicorn = "^0.22.0"
 loguru = "^0.7.0"
 pre-commit = "^3.3.3"
+openai = "^0.27.8"
+python-dotenv = "^1.0.0"
 
 
 [build-system]

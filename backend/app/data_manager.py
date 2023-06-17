@@ -1,7 +1,16 @@
 import json
 import os
 
+import openai
+from dotenv import load_dotenv
+
+# from loguru import logger
 from youtube_transcript_api import YouTubeTranscriptApi
+
+load_dotenv("../../.env")
+openai.api_key = os.getenv("OPENAI_API_KEY", None)
+assert openai.api_key is not None, "No OPENAI_API_KEY environment variable set"
+
 
 DATA_FILE = "data.json"
 
@@ -24,18 +33,20 @@ def save_data(data):
         json.dump(data, f)
 
 
-# TODO - Refactor to use video_id instead of url
-def get_video_summary(video_id, not_exists_ok: bool = True, use_cache: bool = False):
+def get_video_summary(
+    video_id, not_exists_ok: bool = True, use_cache: bool = False
+):  # TODO - Set default to True for production
     global data
     if use_cache:
         for video_data in data:
-            if video_data["url"] == video_id:
+            if video_data["video_id"] == video_id:
                 return video_data
         if not not_exists_ok:
             return None
     else:
         transcript = get_transcript(video_id)
-        summary = generate_summary(transcript)
+        chunks = get_section_chunks(transcript, chunk_duration=300)
+        summary = generate_summary(chunks)
         return summary
 
 
@@ -49,20 +60,77 @@ def get_transcript(video_id):
     return transcript
 
 
-def generate_summary(transcript):
-    # TODO - Generate summary from transcript
-    # Will require splitting transcript into sections
-    # generating a summary for each section
-    # and geneating a summary for the entire video from the section summaries
+def get_section_chunks(
+    transcript, chunk_duration: int = 300, min_chunk_duration: int = 30
+):
+    # Group sections into chunks of approximately 5 minutes (300 seconds)
+    chunks = []
+    current_chunk = {
+        "start": transcript[0]["start"],
+        "end": transcript[0]["end"],
+        "text": transcript[0]["text"],
+    }
+    for section in transcript[1:]:
+        if section["start"] - current_chunk["start"] <= chunk_duration:
+            current_chunk["end"] = section["end"]
+            current_chunk["text"] += " " + section["text"]
+        else:
+            chunks.append(current_chunk)
+            current_chunk = {
+                "start": section["start"],
+                "end": section["end"],
+                "text": section["text"],
+            }
+
+    chunks.append(current_chunk)
+
+    if current_chunk["end"] - current_chunk["start"] <= min_chunk_duration:
+        # Merge the last chunk with the previous chunk
+        previous_chunk = chunks[-1]
+        previous_chunk["end"] = current_chunk["end"]
+        previous_chunk["text"] += " " + current_chunk["text"]
+        chunks.pop()
+
+    return chunks
+
+
+def create_summary_openai(text: str) -> str:
+    prompt = [
+        {
+            "role": "user",
+            "content": f"Summarize the following transcript from a youtube video in 5 sentences or less: \n {text} \n\n Start your summary with 'In this section'",
+        }
+    ]
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=prompt,
+        temperature=0.7,
+        max_tokens=100,
+    )
+    return response.choices[0]["message"]["content"]
+
+
+def generate_summary(chunks):
+    for section in chunks:
+        summary = create_summary_openai(section["text"])
+        section["summary"] = summary
+    overall_summary = create_summary_openai(
+        " ".join([section["summary"] for section in chunks])
+    )
     return {
-        "summary_all": transcript[0]["text"],
-        "summary_sections": [section for section in transcript],
+        "summary_all": overall_summary,
+        "summary_sections": [section for section in chunks],
     }
 
 
-def save_video_summary(url, summary_all, summary_sections):
+def save_video_summary(video_id, summary_all, summary_sections):
     global data
     data.append(
-        {"url": url, "summary_all": summary_all, "summary_sections": summary_sections}
+        {
+            "video_id": video_id,
+            "summary_all": summary_all,
+            "summary_sections": summary_sections,
+        }
     )
     save_data(data)

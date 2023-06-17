@@ -1,4 +1,4 @@
-document.getElementById('summarize-form').addEventListener('submit', function(e) {
+document.getElementById('summarize-form').addEventListener('submit', function (e) {
     e.preventDefault();
     let url = document.getElementById('video-url').value;
     fetch('http://localhost:8000/api/summarize', {
@@ -6,10 +6,10 @@ document.getElementById('summarize-form').addEventListener('submit', function(e)
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({url: url})
+        body: JSON.stringify({ url: url })
     }).then(response => response.json())
-      .then(data => {
-          // redirect to summary page
-          window.location.href = `summary.html?video_id=${data.video_id}`;
-      });
+        .then(data => {
+            // redirect to summary page
+            window.location.href = `summary.html?video_id=${data.video_id}`;
+        });
 });

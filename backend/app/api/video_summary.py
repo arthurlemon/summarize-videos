@@ -21,9 +21,11 @@ class VideoSummaryResponse(BaseModel):
 async def summarize_video(video: VideoSummaryRequest):
     # TODO - Better way to extract video id?
     video_id = video.url.split("v=")[-1]
-    logger.info(f"Summarizing video: {video_id}")
+
     video_summary = get_video_summary(video_id, not_exists_ok=True)
     # Save the summary
+    logger.info(video_summary)
+
     save_video_summary(
         video_id, video_summary["summary_all"], video_summary["summary_sections"]
     )

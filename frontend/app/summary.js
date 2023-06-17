@@ -1,6 +1,5 @@
 let params = new URLSearchParams(window.location.search);
 let video_id = params.get('video_id');
-console.log(video_id);
 
 // Fetch the summary from the backend
 fetch(`http://localhost:8000/api/summary/${encodeURIComponent(video_id)}`)
@@ -17,7 +16,7 @@ fetch(`http://localhost:8000/api/summary/${encodeURIComponent(video_id)}`)
             let div = document.createElement('div');
             div.innerHTML = `
                 <h2>${section.start} - ${section.end}</h2>
-                <p>${section.text}</p>
+                <p>${section.summary}</p>
             `;
             // Append the new div to the container
             sectionSummaries.appendChild(div);
