@@ -36,11 +36,11 @@ class DataManager:
         self.save_data()
 
     def get_video_summary(
-        self, video_id, not_exists_ok: bool = True, use_cache: bool = False
+        self, video_id, not_exists_ok: bool = False, use_cache: bool = True
     ):
-        if use_cache:
+        if use_cache and self.data:
             video_data = self.data.get(video_id)
-            if video_data or not_exists_ok:
+            if video_data is not None and not_exists_ok:
                 return video_data
 
         transcript = get_transcript(video_id)
@@ -98,7 +98,7 @@ def get_section_chunks(
     return chunks
 
 
-def generate_summary(chunks, strategy: str = "fake") -> dict:
+def generate_summary(chunks, strategy: str = "openai") -> dict:
     if strategy == "openai":
         for section in chunks:
             summary = create_summary_openai(section["text"])
@@ -131,7 +131,7 @@ def create_summary_openai(text: str, summary_start: str = "In this section") -> 
         model="gpt-3.5-turbo",
         messages=prompt,
         temperature=0.7,
-        max_tokens=100,
+        max_tokens=300,
     )
     return response.choices[0]["message"]["content"]
 

@@ -8,13 +8,19 @@
 </head>
 
 <body>
-    <h1>Video Summary</h1>
-    <div class="loader" id="loader"></div>
-    <h2 class="hide" id="overall-header">Overall Summary</h2>
-    <div id="overall-summary"></div>
-    <h2 class="hide" id="section-header">Summary of Each Section</h2>
-    <div id="section-summaries"></div>
-    <script src="js/summary.js"></script>
+    <div class="mt-2 container-sm">
+        <div class="vstack gap-3">
+            <h1 id="video-title">Video Summary</h1>
+            <button type="button" class="btn btn-secondary btn-sm summarize-button"><a href="/">Summarize another
+                    video</a></button>
+            <div class="loader" id="loader"></div>
+            <h2 id="overall-header" class="hide">Overall Summary</h2>
+            <div id="overall-summary"></div>
+            <h2 id="section-header" class="hide">Summary of Each Section</h2>
+            <div id="section-summaries"></div>
+            <script src="js/summary.js"></script>
+        </div>
+    </div>
 </body>
 
 </html>
