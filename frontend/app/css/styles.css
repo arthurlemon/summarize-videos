@@ -7,6 +7,48 @@ body {
     margin: 0;
     background-color: #f1e8de;
     font-family: Arial, sans-serif;
+    padding: 0 2em;
+    /* add padding left and right */
+}
+
+a:visited {
+    color: #007BFF;
+    /* change to your preferred color */
+}
+
+.summarize-button {
+    padding: 0.5em 1em;
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.summarize-button a {
+    color: white;
+    text-decoration: none;
+}
+
+.summarize-button:hover {
+    background-color: #0056b3;
+}
+
+.summarize-button a:visited {
+    color: white;
+}
+
+#overall-summary,
+#section-summaries {
+    width: 100%;
+    /* Use full width available */
+    max-width: 56.25em;
+    /* Limit the maximum width (approximately equivalent to 900px for a default font size of 16px) */
+    margin: 0 auto;
+    /* Center the content */
+    padding: 0 1em;
+    /* Add padding to left and right */
 }
 
 .hide {

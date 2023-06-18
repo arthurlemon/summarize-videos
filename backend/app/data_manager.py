@@ -35,12 +35,10 @@ class DataManager:
         }
         self.save_data()
 
-    def get_video_summary(
-        self, video_id, not_exists_ok: bool = True, use_cache: bool = False
-    ):
+    def get_video_summary(self, video_id, use_cache: bool = True):
         if use_cache:
             video_data = self.data.get(video_id)
-            if video_data or not_exists_ok:
+            if video_data is not None:
                 return video_data
 
         transcript = get_transcript(video_id)
@@ -51,7 +49,7 @@ class DataManager:
 
 def get_transcript(video_id: str) -> list[dict]:
     # TODO - Handle errors with video without subtitles
-    transcript = YouTubeTranscriptApi.get_transcript(video_id)
+    transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["en", "fr"])
 
     for section in transcript:
         section["end"] = section["start"] + section["duration"]
@@ -98,7 +96,7 @@ def get_section_chunks(
     return chunks
 
 
-def generate_summary(chunks, strategy: str = "fake") -> dict:
+def generate_summary(chunks, strategy: str = "openai") -> dict:
     if strategy == "openai":
         for section in chunks:
             summary = create_summary_openai(section["text"])
@@ -122,7 +120,7 @@ def create_summary_openai(text: str, summary_start: str = "In this section") -> 
     prompt = [
         {
             "role": "user",
-            "content": f"Summarize the following transcript from a youtube video in 5 sentences or less:"
+            "content": f"Summarize in English the following transcript from a youtube video in 5 sentences or less:"
             f"\n{text}\n\nStart your summary with {summary_start}",
         }
     ]
@@ -131,7 +129,7 @@ def create_summary_openai(text: str, summary_start: str = "In this section") -> 
         model="gpt-3.5-turbo",
         messages=prompt,
         temperature=0.7,
-        max_tokens=100,
+        max_tokens=300,
     )
     return response.choices[0]["message"]["content"]
 

@@ -23,8 +23,7 @@ class VideoSummaryResponse(BaseModel):
 async def summarize_video(video: VideoSummaryRequest):
     # TODO - Better way to extract video id?
     video_id = video.url.split("v=")[-1]
-
-    video_summary = data_manager.get_video_summary(video_id, not_exists_ok=True)
+    video_summary = data_manager.get_video_summary(video_id)
     # Save the summary
     logger.info(video_summary)
 
@@ -41,7 +40,7 @@ async def summarize_video(video: VideoSummaryRequest):
 
 @router.get("/summary/{video_id}", response_model=VideoSummaryResponse | dict)
 async def get_summary(video_id: str):
-    video_data = data_manager.get_video_summary(video_id, not_exists_ok=False)
+    video_data = data_manager.get_video_summary(video_id)
     if video_data is not None:
         return video_data
 
