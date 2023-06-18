@@ -1,10 +1,10 @@
 import json
 import os
+import time
 
 import openai
 from dotenv import load_dotenv
-
-# from loguru import logger
+from loguru import logger
 from youtube_transcript_api import YouTubeTranscriptApi
 
 load_dotenv("../../.env")
@@ -33,11 +33,21 @@ def save_data(data):
         json.dump(data, f)
 
 
-def get_video_summary(
-    video_id, not_exists_ok: bool = True, use_cache: bool = False
-):  # TODO - Set default to True for production
+def save_video_summary(video_id, summary_all, summary_sections):
     global data
-    if use_cache:
+    data.append(
+        {
+            "video_id": video_id,
+            "summary_all": summary_all,
+            "summary_sections": summary_sections,
+        }
+    )
+    save_data(data)
+
+
+def get_video_summary(video_id, not_exists_ok: bool = True, use_cache: bool = False):
+    global data
+    if use_cache and data:
         for video_data in data:
             if video_data["video_id"] == video_id:
                 return video_data
@@ -45,7 +55,7 @@ def get_video_summary(
             return None
     else:
         transcript = get_transcript(video_id)
-        chunks = get_section_chunks(transcript, chunk_duration=300)
+        chunks = get_section_chunks(transcript)
         summary = generate_summary(chunks)
         return summary
 
@@ -55,15 +65,20 @@ def get_transcript(video_id):
     transcript = YouTubeTranscriptApi.get_transcript(video_id)
     # Add end instead of duration
     for section in transcript:
-        section["end"] = round(section["start"] + section["duration"], 4)
+        section["end"] = section["start"] + section["duration"]
+
+    # convert to minutes
+    for section in transcript:
+        section["start"] = round(section["start"] / 60, 4)
+        section["end"] = round(section["end"] / 60, 4)
 
     return transcript
 
 
 def get_section_chunks(
-    transcript, chunk_duration: int = 300, min_chunk_duration: int = 30
+    transcript, chunk_duration: int = 5, min_chunk_duration: float = 0.5
 ):
-    # Group sections into chunks of approximately 5 minutes (300 seconds)
+    # Group sections into chunks of approximately 5 minutes
     chunks = []
     current_chunk = {
         "start": transcript[0]["start"],
@@ -94,11 +109,33 @@ def get_section_chunks(
     return chunks
 
 
-def create_summary_openai(text: str) -> str:
+def generate_summary(chunks, strategy: str = "fake"):
+    if strategy == "openai":
+        for section in chunks:
+            summary = create_summary_openai(section["text"])
+            section["summary"] = summary
+        overall_summary = create_summary_openai(
+            " ".join([section["summary"] for section in chunks]),
+            summary_start="In this video",
+        )
+    else:
+        for section in chunks:
+            section["summary"] = "summary"
+        time.sleep(1)
+        overall_summary = "fake global summary"
+    logger.info(chunks)
+    return {
+        "summary_all": overall_summary,
+        "summary_sections": [section for section in chunks],
+    }
+
+
+def create_summary_openai(text: str, summary_start: str = "In this section") -> str:
     prompt = [
         {
             "role": "user",
-            "content": f"Summarize the following transcript from a youtube video in 5 sentences or less: \n {text} \n\n Start your summary with 'In this section'",
+            "content": f"Summarize the following transcript from a youtube video in 5 sentences or less:"
+            f"\n{text}\n\nStart your summary with {summary_start}",
         }
     ]
 
@@ -111,26 +148,8 @@ def create_summary_openai(text: str) -> str:
     return response.choices[0]["message"]["content"]
 
 
-def generate_summary(chunks):
-    for section in chunks:
-        summary = create_summary_openai(section["text"])
-        section["summary"] = summary
-    overall_summary = create_summary_openai(
-        " ".join([section["summary"] for section in chunks])
-    )
-    return {
-        "summary_all": overall_summary,
-        "summary_sections": [section for section in chunks],
-    }
-
-
-def save_video_summary(video_id, summary_all, summary_sections):
-    global data
-    data.append(
-        {
-            "video_id": video_id,
-            "summary_all": summary_all,
-            "summary_sections": summary_sections,
-        }
-    )
-    save_data(data)
+if __name__ == "__main__":
+    video_id = "kR1buRTIKhk"
+    transcript = get_transcript(video_id)
+    chunks = get_section_chunks(transcript, chunk_duration=5)
+    summary = generate_summary(chunks)

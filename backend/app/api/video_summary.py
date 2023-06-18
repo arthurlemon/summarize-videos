@@ -17,7 +17,7 @@ class VideoSummaryResponse(BaseModel):
     summary_sections: list
 
 
-@router.post("/summarize", response_model=VideoSummaryResponse)
+@router.post("/summarize")  # , response_model=VideoSummaryResponse)
 async def summarize_video(video: VideoSummaryRequest):
     # TODO - Better way to extract video id?
     video_id = video.url.split("v=")[-1]
