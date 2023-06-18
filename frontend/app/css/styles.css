@@ -5,29 +5,42 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    background-color: #f0f0f0;
+    background-color: #f1e8de;
     font-family: Arial, sans-serif;
 }
 
-#progress-bar-container {
-    width: 100%;
-    height: 20px;
-    background-color: #f3f3f3;
-    border: 1px solid #bbb;
+.hide {
+    display: none;
 }
 
-#progress-bar {
-    height: 100%;
-    width: 50%;
-    background-color: #76a6ef;
+.loader {
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 
-
-h1, h2 {
-    text-align: left; /* Align titles to the left */
-    margin: 1; /* Remove default margins for titles */
-    margin-bottom: 10px; /* Add bottom margin for titles */
+h1,
+h2 {
+    text-align: left;
+    /* Align titles to the left */
+    margin: 1;
+    /* Remove default margins for titles */
+    margin-bottom: 10px;
+    /* Add bottom margin for titles */
 }
 
 form {

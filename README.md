@@ -1,5 +1,6 @@
 # summarize-videos
 Simple web app to summarize youtube videos
+Inspired by https://www.summarize.tech/
 
 ## Setup
 

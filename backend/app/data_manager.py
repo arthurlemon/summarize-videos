@@ -12,48 +12,38 @@ openai.api_key = os.getenv("OPENAI_API_KEY", None)
 assert openai.api_key is not None, "No OPENAI_API_KEY environment variable set"
 
 
-DATA_FILE = "data.json"
+class DataManager:
+    def __init__(self, data_file="data.json"):
+        self.data_file = data_file
+        self.data = self.load_data()
 
+    def load_data(self):
+        if os.path.isfile(self.data_file):
+            with open(self.data_file, "r") as f:
+                data = json.load(f)
+        else:
+            data = {}
+        return data
 
-def load_data() -> list:
-    if os.path.isfile(DATA_FILE):
-        with open(DATA_FILE, "r") as f:
-            data = json.load(f)
-    else:
-        data = []
-    return data
+    def save_data(self):
+        with open(self.data_file, "w") as f:
+            json.dump(self.data, f)
 
-
-# TODO - Get video summary from database
-data = load_data()
-
-
-def save_data(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f)
-
-
-def save_video_summary(video_id, summary_all, summary_sections):
-    global data
-    data.append(
-        {
-            "video_id": video_id,
+    def save_video_summary(self, video_id, summary_all, summary_sections):
+        self.data[video_id] = {
             "summary_all": summary_all,
             "summary_sections": summary_sections,
         }
-    )
-    save_data(data)
+        self.save_data()
 
-
-def get_video_summary(video_id, not_exists_ok: bool = True, use_cache: bool = False):
-    global data
-    if use_cache and data:
-        for video_data in data:
-            if video_data["video_id"] == video_id:
+    def get_video_summary(
+        self, video_id, not_exists_ok: bool = True, use_cache: bool = False
+    ):
+        if use_cache:
+            video_data = self.data.get(video_id)
+            if video_data or not_exists_ok:
                 return video_data
-        if not not_exists_ok:
-            return None
-    else:
+
         transcript = get_transcript(video_id)
         chunks = get_section_chunks(transcript)
         summary = generate_summary(chunks)

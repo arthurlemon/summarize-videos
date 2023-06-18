@@ -1,6 +1,5 @@
 let params = new URLSearchParams(window.location.search);
 let video_id = params.get('video_id');
-let progressBar = document.getElementById('progress-bar');
 
 // Fetch the summary from the backend
 fetch(`http://localhost:8000/api/summary/${encodeURIComponent(video_id)}`)
@@ -23,18 +22,9 @@ fetch(`http://localhost:8000/api/summary/${encodeURIComponent(video_id)}`)
             sectionSummaries.appendChild(div);
         });
 
-        // Remove the progress bar once the data has loaded
-        progressBar.style.width = '100%';
-        setTimeout(() => progressBar.style.width = '0%', 500);
+        // After setting the data, remove the 'hide' class from headers
+        document.getElementById('overall-header').classList.remove('hide');
+        document.getElementById('section-header').classList.remove('hide');
+        // Hide the loader
+        document.getElementById('loader').style.display = 'none';
     });
-
-// Simulate progress updates
-let progress = 0;
-let progressInterval = setInterval(() => {
-    progress += Math.random() * 10;
-    if (progress > 100) {
-        progress = 100;
-        clearInterval(progressInterval);
-    }
-    progressBar.style.width = progress + '%';
-}, 100);
