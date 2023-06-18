@@ -1,13 +1,12 @@
 import json
 import os
-import time
 
 import openai
 from dotenv import load_dotenv
 from loguru import logger
 from youtube_transcript_api import YouTubeTranscriptApi
 
-load_dotenv("../../.env")
+load_dotenv(override=True)
 openai.api_key = os.getenv("OPENAI_API_KEY", None)
 assert openai.api_key is not None, "No OPENAI_API_KEY environment variable set"
 
@@ -50,10 +49,10 @@ class DataManager:
         return summary
 
 
-def get_transcript(video_id):
+def get_transcript(video_id: str) -> list[dict]:
     # TODO - Handle errors with video without subtitles
     transcript = YouTubeTranscriptApi.get_transcript(video_id)
-    # Add end instead of duration
+
     for section in transcript:
         section["end"] = section["start"] + section["duration"]
 
@@ -99,7 +98,7 @@ def get_section_chunks(
     return chunks
 
 
-def generate_summary(chunks, strategy: str = "fake"):
+def generate_summary(chunks, strategy: str = "fake") -> dict:
     if strategy == "openai":
         for section in chunks:
             summary = create_summary_openai(section["text"])
@@ -108,10 +107,9 @@ def generate_summary(chunks, strategy: str = "fake"):
             " ".join([section["summary"] for section in chunks]),
             summary_start="In this video",
         )
-    else:
+    else:  # fake summarization for testing
         for section in chunks:
             section["summary"] = "summary"
-        time.sleep(1)
         overall_summary = "fake global summary"
     logger.info(chunks)
     return {
